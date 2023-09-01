@@ -13,14 +13,17 @@ npm install react-native-sys-metrics
 ## Usage
 
 ```js
-import { reportCPUMetrics, SysMetrics } from 'react-native-sys-metrics';
+import { subscribeSystemMetrics, SysMetrics } from 'react-native-sys-metrics';
 
 // ...
-reportCPUMetrics((metrics: SysMetrics) => {
+subscribeSystemMetrics((metrics: SysMetrics) => {
   console.log(`got metrics: ${JSON.stringify(metrics)}`);
 });
 // ...
 ```
+
+## Testing
+You can test that your app handles the MetricKit payload by running your app in XCode on a real device and then selecting "Simulate MetricKit Payloads" from XCode's debug menu.
 
 ## Contributing
 

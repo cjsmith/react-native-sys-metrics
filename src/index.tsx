@@ -1,4 +1,9 @@
-import { NativeModules, Platform } from 'react-native';
+import {
+  NativeModules,
+  Platform,
+  EmitterSubscription,
+  NativeEventEmitter,
+} from 'react-native';
 
 const LINKING_ERROR =
   `The package 'react-native-sys-metrics' doesn't seem to be linked. Make sure: \n\n` +
@@ -13,26 +18,85 @@ const SysMetricsModule = isTurboModuleEnabled
   ? require('./NativeSysMetrics').default
   : NativeModules.SysMetrics;
 
-const SysMetrics = SysMetricsModule
-  ? SysMetricsModule
-  : new Proxy(
-      {},
-      {
-        get() {
-          throw new Error(LINKING_ERROR);
-        },
-      }
-    );
+let eventsSubscription: EmitterSubscription;
 
-export function reportCPUMetrics(
-  callback: (metrics: SysMetrics) => void
-): void {
-  return SysMetrics.reportCPUMetrics(callback);
-}
+const eventEmitter = new NativeEventEmitter(
+  SysMetricsModule
+    ? SysMetricsModule
+    : new Proxy(
+        {},
+        {
+          get() {
+            throw new Error(LINKING_ERROR);
+          },
+        }
+      )
+);
+
+type MemoryMetrics = {
+  averageSuspendedMemory: {
+    averageValue: string;
+    standardDeviation: number;
+    sampleCount: number;
+  };
+  peakMemoryUsage: string;
+};
+
+type CpuMetrics = {
+  cumulativeCPUInstructions: string;
+  cumulativeCPUTime: string;
+};
+
+type ApplicationMetrics = {
+  cumulativeBackgroundLocationTime: string;
+  cumulativeBackgroundAudioTime: string;
+  cumulativeBackgroundTime: string;
+  cumulativeForegroundTime: string;
+};
+
+type ApplicationExitMetrics = {
+  foregroundExitData: {
+    cumulativeAbnormalExitCount: number;
+    cumulativeMemoryResourceLimitExitCount: number;
+    cumulativeBadAccessExitCount: number;
+    cumulativeNormalAppExitCount: number;
+    cumulativeIllegalInstructionExitCount: number;
+    cumulativeAppWatchdogExitCount: number;
+    cumulativeCPUResourceLimitExitCount: number;
+  };
+  backgroundExitData: {
+    cumulativeAbnormalExitCount: number;
+    cumulativeMemoryResourceLimitExitCount: number;
+    cumulativeBadAccessExitCount: number;
+    cumulativeBackgroundURLSessionCompletionTimeoutExitCount: number;
+    cumulativeIllegalInstructionExitCount: number;
+    cumulativeBackgroundFetchCompletionTimeoutExitCount: number;
+    cumulativeBackgroundTaskAssertionTimeoutExitCount: number;
+    cumulativeSuspendedWithLockedFileExitCount: number;
+    cumulativeAppWatchdogExitCount: number;
+    cumulativeMemoryPressureExitCount: number;
+    cumulativeCPUResourceLimitExitCount: number;
+    cumulativeNormalAppExitCount: number;
+  };
+};
 
 export type SysMetrics = {
-  cpuMetrics: string[];
-  applicationExitMetrics: string[];
-  applicationTimeMetrics: string[];
-  memoryMetrics: string[];
+  memoryMetrics: MemoryMetrics[];
+  cpuMetrics: CpuMetrics[];
+  applicationTimeMetrics: ApplicationMetrics[];
+  applicationExitMetrics: ApplicationExitMetrics[];
 };
+
+export const subscribeSystemMetrics = (
+  callback: (metrics: SysMetrics) => void
+) => {
+  eventsSubscription = eventEmitter.addListener('SysMetrics', (event) => {
+    callback(event as SysMetrics);
+  });
+};
+
+export const unsubscribeCPUMetrics = () => {
+  eventsSubscription.remove();
+};
+
+// export default TurboModuleRegistry.getEnforcing<Spec>('SysMetrics');

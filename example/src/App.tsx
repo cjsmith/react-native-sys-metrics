@@ -1,13 +1,13 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text } from 'react-native';
-import { reportCPUMetrics, SysMetrics } from 'react-native-sys-metrics';
+import { subscribeSystemMetrics, SysMetrics } from 'react-native-sys-metrics';
 
 export default function App() {
   const [result, setResult] = React.useState<SysMetrics | undefined>();
 
   React.useEffect(() => {
-    reportCPUMetrics(setResult);
+    subscribeSystemMetrics(setResult);
   }, []);
 
   return (
