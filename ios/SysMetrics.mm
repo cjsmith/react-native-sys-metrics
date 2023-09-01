@@ -61,7 +61,6 @@ RCT_EXPORT_MODULE();
 // Will be called when this module's last listener is removed, or on dealloc.
 -(void)stopObserving {
     hasListeners = NO;
-    [self unsubscribeFromMetrics];
     // Remove upstream listeners, stop unnecessary background tasks
 }
 
