@@ -1,9 +1,6 @@
-import type { TurboModule } from 'react-native';
-import { TurboModuleRegistry } from 'react-native';
-import type { SysMetrics } from 'react-native-sys-metrics';
-
+import { type TurboModule, TurboModuleRegistry } from 'react-native';
 export interface Spec extends TurboModule {
-  reportCPUMetrics(callback: (metrics: SysMetrics) => void): void;
+  addListener: (eventType: string) => void;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>('SysMetrics');
